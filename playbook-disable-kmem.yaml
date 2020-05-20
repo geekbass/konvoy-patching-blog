@@ -1,0 +1,15 @@
+---
+- name: Disable kmem per https://jira.d2iq.com/browse/D2IQ-68006
+  hosts: [ node ]
+  become: true
+  gather_facts: yes
+  tasks:
+    - name: Add the kernel parameter argument to disable kmem 
+      shell: |
+        set -o pipefail
+        grubby --args="cgroup.memory=nokmem" --update-kernel=ALL
+      when: node_pool == "worker-7.7.1908"
+    
+    - name: Reboot the Node and wait for it to come back
+      reboot:
+      when: node_pool == "worker-7.7.1908"

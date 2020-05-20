@@ -1,0 +1,16 @@
+---
+- name: Disable kmem per https://jira.d2iq.com/browse/D2IQ-68006
+  hosts: [ node ]
+  become: true
+  gather_facts: yes
+  tasks:
+    - name: Register kernel Parameters
+      shell: 
+        cmd: cat /proc/cmdline
+      register: kernel_params       
+      when: node_pool == "worker-7.7.1908"
+
+    - name: Validate the Parameters
+      debug:
+        msg: "{{ kernel_params.stdout }}"
+      when: node_pool == "worker-7.7.1908"
