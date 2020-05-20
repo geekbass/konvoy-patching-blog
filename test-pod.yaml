@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-kmem-disable
+  namespace: default
+spec:
+  containers:
+  - args:
+    - /bin/bash
+    - -c
+    - "git clone https://github.com/mesosphere/charts.git && \ cd charts && \ make test\n      "
+    command:
+    - /entrypoint.sh
+    env:
+    - name: HOME
+      value: /root
+    - name: DOCKER_RANGE
+      value: 172.17.1.1/24
+    - name: DOCKER_CONFIG
+      value: /root/.docker
+    image: mesosphere/dispatch-dind:1.0.0
+    name: test-kmem-disable
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: "1"
+        memory: 6Gi
+      requests:
+        cpu: "0"
+        ephemeral-storage: "0"
+        memory: "0"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /var/lib/docker
+      name: docker
+    - mountPath: /lib/modules
+      name: modules
+      readOnly: true
+    - mountPath: /sys/fs/cgroup
+      name: cgroups
+    - mountPath: /builder/volumes/docker
+      name: docker
+    - mountPath: /builder/volumes/modules
+      name: modules
+    - mountPath: /builder/volumes/cgroups
+      name: cgroups
+  nodeSelector:
+    dedicated: testnode
+  tolerations:
+  - effect: NoExecute
+    key: dedicated
+    operator: Equal
+    value: testnode
+  volumes:
+  - emptyDir: {}
+    name: docker
+  - hostPath:
+      path: /lib/modules
+      type: Directory
+    name: modules
+  - hostPath:
+      path: /sys/fs/cgroup
+      type: Directory
+    name: cgroups
